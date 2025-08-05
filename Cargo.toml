@@ -8,7 +8,7 @@ default = []
 tauri = ["dep:tauri", "dep:tungstenite", "dep:tokio-tungstenite", "dep:native-tls", "dep:wasm-bindgen", "dep:wasm-bindgen-futures", "dep:serde-wasm-bindgen"]
 
 [dependencies]
-tokio = { version = "1.47", features = ["rt", "rt-multi-thread", "macros"] }
+tokio = { version = "1", features = ["rt", "rt-multi-thread", "macros"] }
 futures-util = "0.3"
 snowflake = { git = "https://github.com/kappa8719/snowflake" }
 http = "1.3"
