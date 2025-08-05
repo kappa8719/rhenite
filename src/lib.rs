@@ -32,6 +32,7 @@ impl SocketOptions {
 pub struct SocketOptionsBuilder {
     uri: String,
     headers: HashMap<String, String>,
+    root_certificates: Vec<Certificate>,
 }
 
 impl SocketOptionsBuilder {
@@ -39,6 +40,7 @@ impl SocketOptionsBuilder {
         Self {
             uri: String::new(),
             headers: HashMap::new(),
+            root_certificates: Vec::new(),
         }
     }
 
@@ -52,11 +54,16 @@ impl SocketOptionsBuilder {
         self
     }
 
+    pub fn add_root_certificate(mut self, cert: Certificate) -> Self {
+        self.root_certificates.push(cert);
+        self
+    }
+
     pub fn build(self) -> SocketOptions {
         SocketOptions {
             uri: self.uri,
             headers: self.headers,
-            root_certificates: Vec::new(),
+            root_certificates: self.root_certificates,
         }
     }
 }
