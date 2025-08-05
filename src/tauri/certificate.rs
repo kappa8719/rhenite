@@ -2,12 +2,16 @@ use serde::{Deserialize, Serialize};
 use snowflake::Snowflake;
 use std::collections::HashMap;
 use std::sync::{Mutex, MutexGuard};
-use tauri::State;
 use thiserror::Error;
 
 #[cfg(feature = "tauri-host")]
+use tauri::State;
+
+#[cfg(feature = "tauri-host")]
 #[derive(Default)]
-pub(super) struct CertificateManager(pub Mutex<HashMap<CertificateHandle, native_tls::Certificate>>);
+pub(super) struct CertificateManager(
+    pub Mutex<HashMap<CertificateHandle, native_tls::Certificate>>,
+);
 
 #[cfg(feature = "tauri-host")]
 impl CertificateManager {

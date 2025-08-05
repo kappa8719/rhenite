@@ -8,6 +8,8 @@ use snowflake::Snowflake;
 use std::collections::HashMap;
 use std::str::FromStr;
 use std::sync::{Mutex, MutexGuard};
+
+#[cfg(feature = "tauri-host")]
 use tauri::{AppHandle, Emitter, Runtime, State};
 
 #[derive(Clone, Debug)]

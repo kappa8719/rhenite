@@ -8,9 +8,10 @@ pub use certificate::CertificateHandle;
 use serde::Serialize;
 use snowflake::Snowflake;
 pub use socket::SocketHandle;
-use tauri::plugin::TauriPlugin;
-use tauri::{generate_handler, Manager, Runtime};
 use wasm_bindgen::prelude::*;
+
+#[cfg(feature = "tauri-host")]
+use tauri::{Manager, Runtime, generate_handler, plugin::TauriPlugin};
 
 #[wasm_bindgen]
 unsafe extern "C" {
@@ -56,7 +57,7 @@ where
 pub fn plugin<R: Runtime>() -> TauriPlugin<R> {
     use crate::tauri::certificate::CertificateManager;
     use crate::tauri::socket::SocketManager;
-    
+
     tauri::plugin::Builder::new("rhenite-tauri")
         .invoke_handler(generate_handler![
             socket::__create_socket,
