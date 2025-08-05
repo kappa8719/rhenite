@@ -4,25 +4,23 @@ version = "0.1.0"
 edition = "2024"
 
 [features]
-default = ["tauri"]
+default = []
 tauri = ["dep:tauri", "dep:tungstenite", "dep:tokio-tungstenite", "dep:native-tls", "dep:wasm-bindgen", "dep:wasm-bindgen-futures", "dep:serde-wasm-bindgen"]
-gloo-utils = []
-serde-wasm-bindgen = ["dep:serde-wasm-bindgen"]
 
 [dependencies]
-tokio = { version = "1.47.1", features = ["rt", "rt-multi-thread", "macros"] }
+tokio = { version = "1.47", features = ["rt", "rt-multi-thread", "macros"] }
+futures-util = "0.3"
 snowflake = { git = "https://github.com/kappa8719/snowflake" }
-http = "1.3.1"
-serde = "1.0.219"
-thiserror = "2.0.12"
-tauri = { version = "2.7.0", optional = true }
+http = "1.3"
+serde = "1.0"
+thiserror = "2.0"
+tauri = { version = "2", optional = true }
 tungstenite = { version = "0.27.0", optional = true }
 tokio-tungstenite = { version = "0.27.0", optional = true, features = ["native-tls"] }
-native-tls = { version = "0.2.14", optional = true }
+native-tls = { version = "0.2", optional = true }
 wasm-bindgen = { version = "0.2", optional = true }
 wasm-bindgen-futures = { version = "0.4", optional = true }
-serde-wasm-bindgen = { version = "0.6.5", optional = true }
-futures-util = "0.3.31"
+serde-wasm-bindgen = { version = "0.6", optional = true }
 
 [[example]]
 name = "tauri"
