@@ -4,14 +4,12 @@ mod certificate;
 mod ipc;
 mod socket;
 
-use crate::tauri::certificate::CertificateManager;
-use crate::tauri::socket::SocketManager;
 pub use certificate::CertificateHandle;
 use serde::Serialize;
 use snowflake::Snowflake;
 pub use socket::SocketHandle;
 use tauri::plugin::TauriPlugin;
-use tauri::{Manager, Runtime, generate_handler};
+use tauri::{generate_handler, Manager, Runtime};
 use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
@@ -54,7 +52,11 @@ where
     .unwrap()
 }
 
+#[cfg(feature = "tauri-host")]
 pub fn plugin<R: Runtime>() -> TauriPlugin<R> {
+    use crate::tauri::certificate::CertificateManager;
+    use crate::tauri::socket::SocketManager;
+    
     tauri::plugin::Builder::new("rhenite-tauri")
         .invoke_handler(generate_handler![
             socket::__create_socket,

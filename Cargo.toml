@@ -5,11 +5,12 @@ edition = "2024"
 
 [features]
 default = []
-tauri = ["dep:tauri", "dep:tungstenite", "dep:tokio-tungstenite", "dep:native-tls", "dep:wasm-bindgen", "dep:wasm-bindgen-futures", "dep:serde-wasm-bindgen"]
+tauri-host = ["tauri", "dep:tungstenite", "dep:tokio-tungstenite", "dep:native-tls"]
+tauri = ["dep:tauri", "dep:wasm-bindgen", "dep:wasm-bindgen-futures", "dep:serde-wasm-bindgen"]
 
 [dependencies]
 tokio = { version = "1", features = ["rt", "rt-multi-thread", "macros"] }
-futures-util = "0.3"
+futures-util = { version = "0.3", features = ["default", "sink"] }
 snowflake = { git = "https://github.com/kappa8719/snowflake" }
 http = "1.3"
 serde = "1.0"

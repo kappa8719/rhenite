@@ -1,51 +1,58 @@
 use serde::{Deserialize, Serialize};
-use tungstenite::Message;
-use tungstenite::protocol::CloseFrame;
-use tungstenite::protocol::frame::coding::CloseCode;
+
+#[cfg(feature = "tauri-host")]
+type TungsteniteMessage = tungstenite::Message;
+#[cfg(feature = "tauri-host")]
+type TungsteniteCloseFrame = tungstenite::protocol::CloseFrame;
+#[cfg(feature = "tauri-host")]
+type TungsteniteCloseCode = tungstenite::protocol::frame::coding::CloseCode;
 
 /// Internal message type for ipc
 #[derive(Serialize, Deserialize, Clone)]
-pub(super) enum __Message {
+pub enum Message {
     Text(String),
     Binary(Vec<u8>),
     Ping(Vec<u8>),
     Pong(Vec<u8>),
-    Close(Option<__CloseFrame>),
+    Close(Option<CloseFrame>),
 }
 
-impl From<Message> for __Message {
-    fn from(value: Message) -> Self {
+#[cfg(feature = "tauri-host")]
+impl From<TungsteniteMessage> for Message {
+    fn from(value: TungsteniteMessage) -> Self {
         match value {
-            Message::Text(text) => Self::Text(text.to_string()),
-            Message::Binary(payload) => Self::Binary(payload.to_vec()),
-            Message::Ping(payload) => Self::Ping(payload.to_vec()),
-            Message::Pong(payload) => Self::Pong(payload.to_vec()),
-            Message::Close(frame) => Self::Close(frame.map(Into::into)),
-            Message::Frame(_) => unreachable!(),
+            TungsteniteMessage::Text(text) => Self::Text(text.to_string()),
+            TungsteniteMessage::Binary(payload) => Self::Binary(payload.to_vec()),
+            TungsteniteMessage::Ping(payload) => Self::Ping(payload.to_vec()),
+            TungsteniteMessage::Pong(payload) => Self::Pong(payload.to_vec()),
+            TungsteniteMessage::Close(frame) => Self::Close(frame.map(Into::into)),
+            TungsteniteMessage::Frame(_) => unreachable!(),
         }
     }
 }
 
-impl From<__Message> for Message {
-    fn from(value: __Message) -> Self {
+#[cfg(feature = "tauri-host")]
+impl From<Message> for TungsteniteMessage {
+    fn from(value: Message) -> Self {
         match value {
-            __Message::Text(text) => Self::text(text),
-            __Message::Binary(payload) => Self::binary(payload),
-            __Message::Ping(payload) => Self::Ping(payload.into()),
-            __Message::Pong(payload) => Self::Pong(payload.into()),
-            __Message::Close(frame) => Self::Close(frame.map(Into::into)),
+            Message::Text(text) => Self::text(text),
+            Message::Binary(payload) => Self::binary(payload),
+            Message::Ping(payload) => Self::Ping(payload.into()),
+            Message::Pong(payload) => Self::Pong(payload.into()),
+            Message::Close(frame) => Self::Close(frame.map(Into::into)),
         }
     }
 }
 
 #[derive(Serialize, Deserialize, Clone)]
-pub(super) struct __CloseFrame {
-    code: __CloseCode,
+pub struct CloseFrame {
+    code: CloseCode,
     reason: String,
 }
 
-impl From<CloseFrame> for __CloseFrame {
-    fn from(value: CloseFrame) -> Self {
+#[cfg(feature = "tauri-host")]
+impl From<TungsteniteCloseFrame> for CloseFrame {
+    fn from(value: TungsteniteCloseFrame) -> Self {
         Self {
             code: value.code.into(),
             reason: value.reason.to_string(),
@@ -53,8 +60,9 @@ impl From<CloseFrame> for __CloseFrame {
     }
 }
 
-impl From<__CloseFrame> for CloseFrame {
-    fn from(value: __CloseFrame) -> Self {
+#[cfg(feature = "tauri-host")]
+impl From<CloseFrame> for TungsteniteCloseFrame {
+    fn from(value: CloseFrame) -> Self {
         Self {
             code: value.code.into(),
             reason: value.reason.into(),
@@ -63,16 +71,18 @@ impl From<__CloseFrame> for CloseFrame {
 }
 
 #[derive(Serialize, Deserialize, Copy, Clone)]
-pub(super) struct __CloseCode(u16);
+pub struct CloseCode(u16);
 
-impl From<CloseCode> for __CloseCode {
-    fn from(code: CloseCode) -> Self {
-        __CloseCode(code.into())
+#[cfg(feature = "tauri-host")]
+impl From<TungsteniteCloseCode> for CloseCode {
+    fn from(code: TungsteniteCloseCode) -> Self {
+        CloseCode(code.into())
     }
 }
 
-impl From<__CloseCode> for CloseCode {
-    fn from(code: __CloseCode) -> Self {
+#[cfg(feature = "tauri-host")]
+impl From<CloseCode> for TungsteniteCloseCode {
+    fn from(code: CloseCode) -> Self {
         code.0.into()
     }
 }

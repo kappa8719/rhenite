@@ -1,7 +1,7 @@
 use crate::SocketOptions;
-use crate::tauri::certificate::CertificateManager;
-use crate::tauri::ipc::__Message;
-use futures_util::{Sink, SinkExt, StreamExt};
+use crate::tauri::ipc;
+use crate::tauri::ipc::Message;
+use futures_util::{SinkExt, StreamExt};
 use http::{HeaderName, HeaderValue};
 use serde::{Deserialize, Serialize};
 use snowflake::Snowflake;
@@ -9,12 +9,10 @@ use std::collections::HashMap;
 use std::str::FromStr;
 use std::sync::{Mutex, MutexGuard};
 use tauri::{AppHandle, Emitter, Runtime, State};
-use tungstenite::Message;
-use tungstenite::protocol::{CloseFrame, WebSocketConfig};
 
 #[derive(Clone, Debug)]
 pub(super) struct SocketInstance {
-    transmitter: tokio::sync::mpsc::UnboundedSender<Message>,
+    transmitter: tokio::sync::mpsc::UnboundedSender<ipc::Message>,
 }
 
 #[derive(Default)]
@@ -47,7 +45,7 @@ impl SocketHandle {
         format!("__rhenite_socket/{}", self.id())
     }
 
-    pub async fn send(&self, message: Message) {
+    pub async fn send(&self, message: ipc::Message) {
         crate::tauri::invoke::<()>(
             "__send_message_to_socket",
             &__SendMessageArgs {
@@ -59,19 +57,11 @@ impl SocketHandle {
     }
 
     pub async fn close(&self) {
-        self.send(Message::Close(None)).await;
+        self.send(ipc::Message::Close(None)).await;
     }
 
-    pub async fn close_with_reason(
-        &self,
-        code: tungstenite::protocol::frame::coding::CloseCode,
-        reason: String,
-    ) {
-        self.send(Message::Close(Some(CloseFrame {
-            code,
-            reason: reason.into(),
-        })))
-        .await;
+    pub async fn close_with_reason(&self, frame: ipc::CloseFrame) {
+        self.send(ipc::Message::Close(Some(frame))).await;
     }
 }
 
@@ -83,17 +73,20 @@ struct __CreateSocketArgs {
 #[derive(Serialize, Deserialize)]
 struct __SendMessageArgs {
     handle: SocketHandle,
-    message: __Message,
+    message: Message,
 }
 
+#[cfg(feature = "tauri-host")]
 #[tauri::command]
 pub(super) async fn __create_socket<R: Runtime>(
     app: AppHandle<R>,
     snowflake: State<'_, Snowflake>,
     socket_manager: State<'_, SocketManager>,
-    certificate_manager: State<'_, CertificateManager>,
+    certificate_manager: State<'_, super::certificate::CertificateManager>,
     options: SocketOptions,
 ) -> Result<SocketHandle, ()> {
+    use tungstenite::protocol::WebSocketConfig;
+
     let mut request = tungstenite::handshake::client::Request::builder()
         .uri(options.uri)
         .body(())
@@ -152,7 +145,7 @@ pub(super) async fn __create_socket<R: Runtime>(
                         return;
                     };
 
-                    let _ = app.emit(event_name.as_str(), __Message::from(message));
+                    let _ = app.emit(event_name.as_str(), Message::from(message));
                 }
             }
         })
@@ -161,7 +154,7 @@ pub(super) async fn __create_socket<R: Runtime>(
     // handle outgoing
     tokio::spawn(async move {
         while let Some(message) = rx.recv().await {
-            let _ = sink.send(message).await;
+            let _ = sink.send(message.into()).await;
         }
     });
 
@@ -171,11 +164,12 @@ pub(super) async fn __create_socket<R: Runtime>(
     Ok(handle)
 }
 
+#[cfg(feature = "tauri-host")]
 #[tauri::command]
 pub(super) async fn __send_message_to_socket(
     socket_manager: State<'_, SocketManager>,
     handle: SocketHandle,
-    message: __Message,
+    message: Message,
 ) -> Result<(), ()> {
     let Some(socket) = socket_manager.get(handle) else {
         return Err(());
