@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-mod tauri;
+pub mod tauri;
 
 #[cfg(feature = "tauri")]
 pub type WebSocket = tauri::SocketHandle;
